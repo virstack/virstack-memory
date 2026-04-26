@@ -1,6 +1,6 @@
-"""Integration tests against a live Graphiti server.
+"""Integration tests against a live Memory server.
 
-These tests require a running Graphiti server at ``http://localhost:8000``.
+These tests require a running Memory server at ``http://localhost:8000``.
 They are skipped automatically if the server is unreachable.
 
 Run manually::
@@ -15,12 +15,12 @@ import uuid
 import httpx
 import pytest
 
-from virstack_memory.client import GraphitiClient
+from virstack_memory.client import MemoryClient
 from virstack_memory.models import Message
 
 
 def _server_is_up() -> bool:
-    """Synchronous check if the Graphiti server is reachable."""
+    """Synchronous check if the Memory server is reachable."""
     try:
         r = httpx.get("http://localhost:8000/healthcheck", timeout=3.0)
         return r.status_code == 200
@@ -31,14 +31,14 @@ def _server_is_up() -> bool:
 # Skip the entire module if the server is not reachable
 pytestmark = pytest.mark.skipif(
     not _server_is_up(),
-    reason="Graphiti server not running at localhost:8000",
+    reason="Memory server not running at localhost:8000",
 )
 
 
 @pytest.fixture
 async def client():
-    """Provide a live GraphitiClient and close it after the test."""
-    async with GraphitiClient("http://localhost:8000") as c:
+    """Provide a live MemoryClient and close it after the test."""
+    async with MemoryClient("http://localhost:8000") as c:
         yield c
 
 
@@ -49,12 +49,12 @@ def test_group_id() -> str:
 
 
 class TestLiveHealthcheck:
-    async def test_server_is_healthy(self, client: GraphitiClient) -> None:
+    async def test_server_is_healthy(self, client: MemoryClient) -> None:
         assert await client.healthcheck() is True
 
 
 class TestLiveMessages:
-    async def test_add_and_search(self, client: GraphitiClient, test_group_id: str) -> None:
+    async def test_add_and_search(self, client: MemoryClient, test_group_id: str) -> None:
         scope = client.project(f"test_{test_group_id}")
 
         # Ingest a message
@@ -78,7 +78,7 @@ class TestLiveMessages:
 
 
 class TestLiveDelete:
-    async def test_delete_group(self, client: GraphitiClient, test_group_id: str) -> None:
+    async def test_delete_group(self, client: MemoryClient, test_group_id: str) -> None:
         scope = client.project(f"test_{test_group_id}")
         result = await scope.delete()
         assert result.success is True

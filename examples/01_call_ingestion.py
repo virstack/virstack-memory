@@ -10,16 +10,16 @@ Usage::
 
 import asyncio
 
-from virstack_memory import GraphitiClient, Message
+from virstack_memory import MemoryClient, Message
 
 
 async def main() -> None:
-    async with GraphitiClient("http://localhost:8000") as client:
+    async with MemoryClient("http://localhost:8000") as client:
         # Verify server is up
         healthy = await client.healthcheck()
         print(f"Server healthy: {healthy}")
         if not healthy:
-            print("Graphiti server is not running. Start it first.")
+            print("Memory server is not running. Start it first.")
             return
 
         # Build the scope chain for this specific call

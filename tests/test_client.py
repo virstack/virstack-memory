@@ -1,4 +1,4 @@
-"""Unit tests for GraphitiClient HTTP operations."""
+"""Unit tests for MemoryClient HTTP operations."""
 
 from __future__ import annotations
 
@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from virstack_memory.client import GraphitiClient
+from virstack_memory.client import MemoryClient
 from virstack_memory.exceptions import (
-    GraphitiAPIError,
-    GraphitiConnectionError,
-    GraphitiValidationError,
+    MemoryAPIError,
+    MemoryConnectionError,
+    MemoryValidationError,
 )
 from virstack_memory.models import Message
 from virstack_memory.scopes import MemoryScope
@@ -22,21 +22,21 @@ class TestClientLifecycle:
     """Test client construction, context manager, and close."""
 
     def test_base_url_trailing_slash_stripped(self) -> None:
-        c = GraphitiClient("http://localhost:8000/")
+        c = MemoryClient("http://localhost:8000/")
         assert c.base_url == "http://localhost:8000"
 
-    def test_project_returns_memory_scope(self, client: GraphitiClient) -> None:
+    def test_project_returns_memory_scope(self, client: MemoryClient) -> None:
         scope = client.project("test")
         assert isinstance(scope, MemoryScope)
 
     async def test_async_context_manager(self, mock_http: AsyncMock) -> None:
-        async with GraphitiClient("http://localhost:8000") as c:
+        async with MemoryClient("http://localhost:8000") as c:
             c.http = mock_http
             assert c is not None
         # aclose should have been called on exit
         mock_http.aclose.assert_awaited_once()
 
-    async def test_close_calls_aclose(self, client: GraphitiClient, mock_http: AsyncMock) -> None:
+    async def test_close_calls_aclose(self, client: MemoryClient, mock_http: AsyncMock) -> None:
         await client.close()
         mock_http.aclose.assert_awaited_once()
 
@@ -47,7 +47,7 @@ class TestClientLifecycle:
 class TestHealthcheck:
     """Test the GET /healthcheck endpoint wrapper."""
 
-    async def test_healthy(self, client: GraphitiClient, mock_http: AsyncMock) -> None:
+    async def test_healthy(self, client: MemoryClient, mock_http: AsyncMock) -> None:
         response = MagicMock()
         response.status_code = 200
         mock_http.get.return_value = response
@@ -55,7 +55,7 @@ class TestHealthcheck:
         assert await client.healthcheck() is True
         mock_http.get.assert_awaited_with("/healthcheck")
 
-    async def test_unhealthy(self, client: GraphitiClient, mock_http: AsyncMock) -> None:
+    async def test_unhealthy(self, client: MemoryClient, mock_http: AsyncMock) -> None:
         response = MagicMock()
         response.status_code = 503
         mock_http.get.return_value = response
@@ -63,7 +63,7 @@ class TestHealthcheck:
         assert await client.healthcheck() is False
 
     async def test_connection_error_returns_false(
-        self, client: GraphitiClient, mock_http: AsyncMock
+        self, client: MemoryClient, mock_http: AsyncMock
     ) -> None:
         import httpx
 
@@ -78,7 +78,7 @@ class TestErrorHandling:
     """Test that HTTP errors are mapped to SDK exceptions."""
 
     async def test_422_raises_validation_error(
-        self, client: GraphitiClient, mock_http: AsyncMock
+        self, client: MemoryClient, mock_http: AsyncMock
     ) -> None:
         response = MagicMock()
         response.status_code = 422
@@ -86,37 +86,37 @@ class TestErrorHandling:
         response.text = '{"detail": "bad field"}'
         mock_http.post.return_value = response
 
-        with pytest.raises(GraphitiValidationError) as exc_info:
+        with pytest.raises(MemoryValidationError) as exc_info:
             await client._post("/messages", {})
         assert exc_info.value.status_code == 422
 
-    async def test_500_raises_api_error(self, client: GraphitiClient, mock_http: AsyncMock) -> None:
+    async def test_500_raises_api_error(self, client: MemoryClient, mock_http: AsyncMock) -> None:
         response = MagicMock()
         response.status_code = 500
         response.is_success = False
         response.text = "Internal Server Error"
         mock_http.post.return_value = response
 
-        with pytest.raises(GraphitiAPIError) as exc_info:
+        with pytest.raises(MemoryAPIError) as exc_info:
             await client._post("/messages", {})
         assert exc_info.value.status_code == 500
 
     async def test_connection_error_wraps_httpx(
-        self, client: GraphitiClient, mock_http: AsyncMock
+        self, client: MemoryClient, mock_http: AsyncMock
     ) -> None:
         import httpx
 
         mock_http.post.side_effect = httpx.ConnectError("refused")
 
-        with pytest.raises(GraphitiConnectionError):
+        with pytest.raises(MemoryConnectionError):
             await client._post("/messages", {})
 
-    async def test_timeout_wraps_httpx(self, client: GraphitiClient, mock_http: AsyncMock) -> None:
+    async def test_timeout_wraps_httpx(self, client: MemoryClient, mock_http: AsyncMock) -> None:
         import httpx
 
         mock_http.delete.side_effect = httpx.TimeoutException("timed out")
 
-        with pytest.raises(GraphitiConnectionError):
+        with pytest.raises(MemoryConnectionError):
             await client._delete("/group/test")
 
 

@@ -10,11 +10,11 @@ Usage::
 
 import asyncio
 
-from virstack_memory import GraphitiClient
+from virstack_memory import MemoryClient
 
 
 async def main() -> None:
-    async with GraphitiClient("http://localhost:8000") as client:
+    async with MemoryClient("http://localhost:8000") as client:
         # --- Delete a single customer's data ---
         # Only removes data in "proj_virstack_prod_ws_acme_corp_agt_support_bot_v2_cust_cust_12345"
         # The agent, workspace, and project data remain intact.

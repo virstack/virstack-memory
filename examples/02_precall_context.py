@@ -11,11 +11,11 @@ Usage::
 
 import asyncio
 
-from virstack_memory import GraphitiClient
+from virstack_memory import MemoryClient
 
 
 async def main() -> None:
-    async with GraphitiClient("http://localhost:8000") as client:
+    async with MemoryClient("http://localhost:8000") as client:
         # Build scope for the incoming call
         call_memory = (
             client

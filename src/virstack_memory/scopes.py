@@ -1,4 +1,4 @@
-"""Multi-tenant scope builder for Graphiti group IDs.
+"""Multi-tenant scope builder for Memory group IDs.
 
 The :class:`MemoryScope` class implements a fluent builder pattern that
 constructs hierarchical ``group_id`` strings like
@@ -24,7 +24,7 @@ from virstack_memory.models import (
 )
 
 if TYPE_CHECKING:
-    from virstack_memory.client import GraphitiClient
+    from virstack_memory.client import MemoryClient
 
 
 # Compact prefix map for building group_id strings
@@ -39,14 +39,14 @@ _PREFIX_MAP: dict[str, str] = {
 class MemoryScope:
     """Represents a specific multi-tenant memory bucket.
 
-    Instances are created via :meth:`GraphitiClient.project` and then
+    Instances are created via :meth:`MemoryClient.project` and then
     chained with ``.workspace()``, ``.agent()``, and ``.customer()`` to
     narrow the scope.  The resulting :attr:`active_group_id` is used as
-    the ``group_id`` parameter for all Graphiti API calls made through
+    the ``group_id`` parameter for all Memory API calls made through
     this scope.
 
     Args:
-        client: The parent :class:`GraphitiClient` used for HTTP calls.
+        client: The parent :class:`MemoryClient` used for HTTP calls.
         scope_name: Human-readable scope level name (``project``, ``workspace``, etc.).
         scope_id: The unique identifier for this scope level.
         parent: Optional parent scope for building the full path.
@@ -56,7 +56,7 @@ class MemoryScope:
 
     def __init__(
         self,
-        client: GraphitiClient,
+        client: MemoryClient,
         scope_name: str,
         scope_id: str,
         parent: MemoryScope | None = None,

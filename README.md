@@ -1,6 +1,6 @@
 <div align="center">
   <h1>🧠 virstack-memory</h1>
-  <p><b>A professional Python SDK for the Graphiti memory server with strict multi-tenant isolation.</b></p>
+  <p><b>A professional Python SDK for the Memory server with strict multi-tenant isolation.</b></p>
 
   <p>
     <a href="https://github.com/virstack/virstack-memory/actions"><img src="https://img.shields.io/github/actions/workflow/status/virstack/virstack-memory/test.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
@@ -12,14 +12,14 @@
 
 ---
 
-**virstack-memory** is a fluent, async-first Python client designed specifically for integrating AI agents with the [Graphiti](https://github.com/getzep/graphiti) knowledge graph server. It ensures robust data isolation across complex enterprise hierarchies (Projects → Workspaces → Agents → Customers).
+**virstack-memory** is a fluent, async-first Python client designed specifically for integrating AI agents with the [Memory](https://github.com/getzep/graphiti) knowledge graph server. It ensures robust data isolation across complex enterprise hierarchies (Projects → Workspaces → Agents → Customers).
 
 ## ✨ Features
 
 * ⛓️ **Fluent Scope Chaining:** Intuitive builder pattern `client.project("A").workspace("B").agent("C")`
 * 🏢 **Multi-Tenant Isolation:** Automatically generates isolated database buckets (e.g., `proj_1_ws_A_agt_X_cust_999`).
 * 🔎 **Cascading Search:** Retrieve combined context across all ancestor scopes in a single query.
-* 🛡️ **Type Safety:** Built with Pydantic v2 DTOs that strictly match the Graphiti FastAPI schema.
+* 🛡️ **Type Safety:** Built with Pydantic v2 DTOs that strictly match the Memory FastAPI schema.
 * ⚡ **Async-First:** Powered by `httpx.AsyncClient` for high-concurrency LLM workflows.
 * 🚦 **Structured Errors:** Clean exception hierarchy for connection issues, API errors, and validations.
 
@@ -45,11 +45,11 @@ Initialize the client, build your scope, and start interacting with the graph.
 
 ```python
 import asyncio
-from virstack_memory import GraphitiClient, Message
+from virstack_memory import MemoryClient, Message
 
 async def main():
     # 1. Initialize the async client
-    async with GraphitiClient("http://localhost:8000") as client:
+    async with MemoryClient("http://localhost:8000") as client:
         
         # 2. Build the exact isolation scope for this interaction
         memory = (
@@ -104,12 +104,12 @@ scope = client.project("1").workspace("A").agent("X").customer("999")
 
 ## 📚 API Reference
 
-### `GraphitiClient`
+### `MemoryClient`
 The root HTTP client and entry point for building scopes.
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `healthcheck()` | `GET /healthcheck` | Checks if the Graphiti server is reachable. |
+| `healthcheck()` | `GET /healthcheck` | Checks if the Memory server is reachable. |
 | `clear()` | `POST /clear` | ⚠️ **DANGER:** Wipes ALL graph data globally. |
 | `project(id)` | — | Starts a new scope chain. |
 

@@ -1,9 +1,9 @@
-"""Base HTTP client for the Graphiti FastAPI server.
+"""Base HTTP client for the Memory FastAPI server.
 
-Provides :class:`GraphitiClient`, a thin async wrapper around
+Provides :class:`MemoryClient`, a thin async wrapper around
 ``httpx.AsyncClient`` that handles global endpoints (``/healthcheck``,
 ``/clear``) and acts as the entry-point for the scope chain via
-:meth:`GraphitiClient.project`.
+:meth:`MemoryClient.project`.
 """
 
 from __future__ import annotations
@@ -13,24 +13,24 @@ from typing import Any
 import httpx
 
 from virstack_memory.exceptions import (
-    GraphitiAPIError,
-    GraphitiConnectionError,
-    GraphitiValidationError,
+    MemoryAPIError,
+    MemoryConnectionError,
+    MemoryValidationError,
 )
 from virstack_memory.models import Result
 from virstack_memory.scopes import MemoryScope
 
 
-class GraphitiClient:
-    """Async client for the Graphiti memory server.
+class MemoryClient:
+    """Async client for the Memory server.
 
     Args:
-        base_url: Root URL of the Graphiti server (e.g. ``http://localhost:8000``).
+        base_url: Root URL of the Memory server (e.g. ``http://localhost:8000``).
         timeout: HTTP request timeout in seconds. Defaults to ``45.0``.
 
     Usage::
 
-        async with GraphitiClient("http://localhost:8000") as client:
+        async with MemoryClient("http://localhost:8000") as client:
             ok = await client.healthcheck()
             scope = client.project("proj_1").workspace("ws_A")
     """
@@ -41,7 +41,7 @@ class GraphitiClient:
 
     # ── Async context manager ───────────────────────────────────────
 
-    async def __aenter__(self) -> GraphitiClient:
+    async def __aenter__(self) -> MemoryClient:
         return self
 
     async def __aexit__(self, *exc: object) -> None:
@@ -90,14 +90,14 @@ class GraphitiClient:
         """Send a POST request and return the parsed JSON body.
 
         Raises:
-            GraphitiConnectionError: On network-level failures.
-            GraphitiValidationError: On 422 responses.
-            GraphitiAPIError: On any other non-2xx status.
+            MemoryConnectionError: On network-level failures.
+            MemoryValidationError: On 422 responses.
+            MemoryAPIError: On any other non-2xx status.
         """
         try:
             res = await self.http.post(path, json=payload)
         except (httpx.ConnectError, httpx.TimeoutException) as exc:
-            raise GraphitiConnectionError(str(exc)) from exc
+            raise MemoryConnectionError(str(exc)) from exc
 
         self._raise_for_status(res)
         return res.json() if res.content else {}
@@ -107,7 +107,7 @@ class GraphitiClient:
         try:
             res = await self.http.get(path, params=params)
         except (httpx.ConnectError, httpx.TimeoutException) as exc:
-            raise GraphitiConnectionError(str(exc)) from exc
+            raise MemoryConnectionError(str(exc)) from exc
 
         self._raise_for_status(res)
         return res.json() if res.content else {}
@@ -117,7 +117,7 @@ class GraphitiClient:
         try:
             res = await self.http.delete(path)
         except (httpx.ConnectError, httpx.TimeoutException) as exc:
-            raise GraphitiConnectionError(str(exc)) from exc
+            raise MemoryConnectionError(str(exc)) from exc
 
         self._raise_for_status(res)
         return res.json() if res.content else {}
@@ -132,8 +132,8 @@ class GraphitiClient:
 
         detail = response.text
         if response.status_code == 422:
-            raise GraphitiValidationError(detail)
-        raise GraphitiAPIError(response.status_code, detail)
+            raise MemoryValidationError(detail)
+        raise MemoryAPIError(response.status_code, detail)
 
     # ── Lifecycle ───────────────────────────────────────────────────
 

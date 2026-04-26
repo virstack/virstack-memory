@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for the virstack-graphiti test suite."""
+"""Shared pytest fixtures for the virstack-memory test suite."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from virstack_memory.client import GraphitiClient
+from virstack_memory.client import MemoryClient
 from virstack_memory.scopes import MemoryScope
 
 
@@ -32,26 +32,26 @@ def mock_http() -> AsyncMock:
 
 
 @pytest.fixture
-def client(mock_http: AsyncMock) -> GraphitiClient:
-    """A :class:`GraphitiClient` with its HTTP transport replaced by a mock."""
-    c = GraphitiClient("http://test:8000")
+def client(mock_http: AsyncMock) -> MemoryClient:
+    """A :class:`MemoryClient` with its HTTP transport replaced by a mock."""
+    c = MemoryClient("http://test:8000")
     c.http = mock_http
     return c
 
 
 @pytest.fixture
-def full_scope(client: GraphitiClient) -> MemoryScope:
+def full_scope(client: MemoryClient) -> MemoryScope:
     """A fully-chained scope: project → workspace → agent → customer."""
     return client.project("1").workspace("A").agent("X").customer("999")
 
 
 @pytest.fixture
-def project_scope(client: GraphitiClient) -> MemoryScope:
+def project_scope(client: MemoryClient) -> MemoryScope:
     """A project-level scope."""
     return client.project("1")
 
 
 @pytest.fixture
-def workspace_scope(client: GraphitiClient) -> MemoryScope:
+def workspace_scope(client: MemoryClient) -> MemoryScope:
     """A project + workspace scope."""
     return client.project("1").workspace("A")

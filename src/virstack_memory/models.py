@@ -1,4 +1,4 @@
-"""Pydantic DTOs matching the Graphiti FastAPI server schema exactly.
+"""Pydantic DTOs matching the Memory FastAPI server schema exactly.
 
 These models are derived from the server's ``graph_service.dto`` module
 (https://github.com/getzep/graphiti) and are configured with
