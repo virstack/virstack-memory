@@ -1,37 +1,57 @@
-# virstack-memory
+<div align="center">
+  <h1>🧠 virstack-memory</h1>
+  <p><b>A professional Python SDK for the Graphiti memory server with strict multi-tenant isolation.</b></p>
 
-A Python SDK for interacting with the [Graphiti](https://github.com/getzep/graphiti) memory server, providing fluent multi-tenant scope isolation for AI agent knowledge graphs.
+  <p>
+    <a href="https://github.com/virstack/virstack-memory/actions"><img src="https://img.shields.io/github/actions/workflow/status/virstack/virstack-memory/test.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
+    <a href="https://pypi.org/project/virstack-memory/"><img src="https://img.shields.io/pypi/v/virstack-memory.svg?style=flat-square&color=blue" alt="PyPI Version"></a>
+    <a href="https://pypi.org/project/virstack-memory/"><img src="https://img.shields.io/pypi/pyversions/virstack-memory.svg?style=flat-square" alt="Python Versions"></a>
+    <a href="https://github.com/virstack/virstack-memory/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg?style=flat-square" alt="License"></a>
+  </p>
+</div>
 
-## Features
+---
 
-- **Fluent scope chaining** — `client.project("1").workspace("A").agent("X").customer("999")`
-- **Cascading search** — automatically queries across all ancestor scopes for rich context
-- **Multi-tenant isolation** — each scope level generates a unique `group_id` path (e.g. `proj_1_ws_A_agt_X_cust_999`)
-- **Typed models** — Pydantic v2 DTOs matching the Graphiti FastAPI server schema
-- **Async-first** — built on `httpx.AsyncClient` for high-throughput environments
-- **Error handling** — structured exceptions for connection, validation, and API errors
+**virstack-memory** is a fluent, async-first Python client designed specifically for integrating AI agents with the [Graphiti](https://github.com/getzep/graphiti) knowledge graph server. It ensures robust data isolation across complex enterprise hierarchies (Projects → Workspaces → Agents → Customers).
 
-## Installation
+## ✨ Features
 
+* ⛓️ **Fluent Scope Chaining:** Intuitive builder pattern `client.project("A").workspace("B").agent("C")`
+* 🏢 **Multi-Tenant Isolation:** Automatically generates isolated database buckets (e.g., `proj_1_ws_A_agt_X_cust_999`).
+* 🔎 **Cascading Search:** Retrieve combined context across all ancestor scopes in a single query.
+* 🛡️ **Type Safety:** Built with Pydantic v2 DTOs that strictly match the Graphiti FastAPI schema.
+* ⚡ **Async-First:** Powered by `httpx.AsyncClient` for high-concurrency LLM workflows.
+* 🚦 **Structured Errors:** Clean exception hierarchy for connection issues, API errors, and validations.
+
+---
+
+## 📦 Installation
+
+Install via pip:
 ```bash
 pip install virstack-memory
 ```
 
-Or with uv:
-
+Or using [uv](https://github.com/astral-sh/uv):
 ```bash
 uv add virstack-memory
 ```
 
-## Quick Start
+---
+
+## 🚀 Quick Start
+
+Initialize the client, build your scope, and start interacting with the graph.
 
 ```python
 import asyncio
 from virstack_memory import GraphitiClient, Message
 
 async def main():
+    # 1. Initialize the async client
     async with GraphitiClient("http://localhost:8000") as client:
-        # Build the scope chain for a specific customer call
+        
+        # 2. Build the exact isolation scope for this interaction
         memory = (
             client
             .project("virstack_prod")
@@ -40,83 +60,88 @@ async def main():
             .customer("cust_123")
         )
 
-        # 1. Fetch multi-layered context before the call
+        # 3. Fetch cascaded context (Searches Project + Workspace + Agent + Customer)
         facts = await memory.search(
             query="What are the customer's previous issues?",
-            include_parents=True,  # searches across all ancestor scopes
+            include_parents=True, 
         )
         for fact in facts:
-            print(f"  {fact.fact}")
+            print(f"💡 {fact.fact}")
 
-        # 2. Save the transcript after the call
+        # 4. Save the conversation transcript
         await memory.add_messages([
             Message(role_type="user", content="I need a refund."),
             Message(role_type="assistant", content="I'll process that right away."),
         ])
 
-        # 3. Delete just the customer's data (GDPR compliance)
+        # 5. GDPR Compliance: Delete just this specific customer's data
         await memory.delete()
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
-## How Scope Isolation Works
+---
 
-The SDK builds hierarchical `group_id` strings that map to isolated buckets in the Neo4j graph:
+## 🏗️ How Scope Isolation Works
 
+The SDK constructs hierarchical `group_id` strings that map to isolated buckets within the Neo4j backend graph.
+
+```python
+scope = client.project("1").workspace("A").agent("X").customer("999")
 ```
-client.project("1").workspace("A").agent("X").customer("999")
-```
 
-| Property              | Value                                                                        |
-| --------------------- | ---------------------------------------------------------------------------- |
-| `active_group_id`     | `proj_1_ws_A_agt_X_cust_999`                                                |
+| Property | Generated Value |
+| :--- | :--- |
+| `active_group_id` | `proj_1_ws_A_agt_X_cust_999` |
 | `cascading_group_ids` | `["proj_1", "proj_1_ws_A", "proj_1_ws_A_agt_X", "proj_1_ws_A_agt_X_cust_999"]` |
 
-When searching with `include_parents=True`, all cascading IDs are sent to the `/search` endpoint, allowing the AI agent to access:
-- **Project-level** knowledge (global policies)
-- **Workspace-level** knowledge (tenant-specific rules)
-- **Agent-level** knowledge (agent persona/behavior)
-- **Customer-level** knowledge (individual conversation history)
+> [!TIP]
+> **Cascading Search Magic:**
+> When executing `search(..., include_parents=True)`, the SDK sends **all** `cascading_group_ids` to the server. This allows your agent to simultaneously retrieve global policies (Project level), tenant-specific rules (Workspace level), agent personas (Agent level), and conversation history (Customer level)—all isolated but accessible when needed.
 
-## API Reference
+---
+
+## 📚 API Reference
 
 ### `GraphitiClient`
+The root HTTP client and entry point for building scopes.
 
-| Method                   | Endpoint           | Description                           |
-| ------------------------ | ------------------ | ------------------------------------- |
-| `healthcheck()`          | `GET /healthcheck` | Check server health                   |
-| `clear()`                | `POST /clear`      | ⚠️ Wipe ALL graph data                |
-| `project(id)`            | —                  | Start scope chain                     |
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `healthcheck()` | `GET /healthcheck` | Checks if the Graphiti server is reachable. |
+| `clear()` | `POST /clear` | ⚠️ **DANGER:** Wipes ALL graph data globally. |
+| `project(id)` | — | Starts a new scope chain. |
 
 ### `MemoryScope`
+The scoped execution context.
 
-| Method                              | Endpoint                    | Description                       |
-| ----------------------------------- | --------------------------- | --------------------------------- |
-| `workspace(id)` / `agent(id)` / `customer(id)` | —              | Chain scope deeper                |
-| `add_messages(messages)`            | `POST /messages`            | Ingest conversation (202)         |
-| `add_entity_node(uuid, name)`       | `POST /entity-node`         | Create manual entity (201)        |
-| `search(query, ...)`                | `POST /search`              | Search facts (200)                |
-| `get_memory(messages, ...)`         | `POST /get-memory`          | Context from messages (200)       |
-| `get_episodes(last_n=10)`           | `GET /episodes/{group_id}`  | Fetch recent episodes (200)       |
-| `delete()`                          | `DELETE /group/{group_id}`  | Delete scope data (200)           |
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `workspace(id)` | — | Narrows scope to a Workspace. |
+| `agent(id)` | — | Narrows scope to an Agent. |
+| `customer(id)` | — | Narrows scope to a Customer. |
+| `add_messages(...)` | `POST /messages` | Queues a conversation transcript for ingestion. |
+| `add_entity_node(...)`| `POST /entity-node` | Manually creates a graph entity node. |
+| `search(...)` | `POST /search` | Retrieves facts matching a natural language query. |
+| `get_memory(...)` | `POST /get-memory` | Generates context directly from recent messages. |
+| `get_episodes(...)` | `GET /episodes/{id}` | Fetches recent conversation episodes. |
+| `delete()` | `DELETE /group/{id}` | Permanently deletes all data within this exact scope. |
 
-## Development
+---
+
+## 🛠️ Development Setup
+
+We use `uv` for dependency management and `make` for developer workflows.
 
 ```bash
-# Install all dependencies
+# Install all dependencies (including dev)
 make install
 
-# Run all checks (format + lint + typecheck + tests)
+# Run the complete verification suite (format, lint, typecheck, tests)
 make check
 
-# Run only unit tests
+# Run tests
 make test-unit
-
-# Run integration tests (requires running Graphiti server)
 make test-integration
 ```
-
-## License
-
-MIT
