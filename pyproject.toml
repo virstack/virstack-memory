@@ -1,0 +1,60 @@
+[project]
+name = "virstack-memory"
+version = "0.1.0"
+description = "Python SDK for interacting with the Graphiti memory server with multi-tenant scope isolation."
+readme = "README.md"
+authors = [
+    { name = "mayuras", email = "mayura.s@virstack.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27,<1.0",
+    "pydantic>=2.0,<3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+    "pyright>=1.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/virstack_memory"]
+
+# ── Ruff ────────────────────────────────────────────────────────────
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "RUF", # ruff-specific rules
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["virstack_memory"]
+
+# ── Pyright ─────────────────────────────────────────────────────────
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+include = ["src"]
+
+# ── Pytest ──────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
