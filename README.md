@@ -39,7 +39,9 @@ uv add virstack-memory
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Getting Started
+
+*Looking for the full manual? Check out the [Comprehensive Documentation](https://github.com/virstack/virstack-memory/blob/main/DOCUMENTATION.md).*
 
 Initialize the client, build your scope, and start interacting with the graph.
 
