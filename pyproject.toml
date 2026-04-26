@@ -1,10 +1,10 @@
 [project]
 name = "virstack-memory"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python SDK for interacting with the Memory server with multi-tenant scope isolation."
 readme = "README.md"
 authors = [
-    { name = "mayuras", email = "mayura.s@virstack.com" }
+    { name = "Mayura Sandakalum", email = "mssellapperuma@gmail.com" }
 ]
 requires-python = ">=3.11"
 dependencies = [
